@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camp Weekend 2026 – Inscripciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --fire: #FF4D00;
+    --ember: #FF8C42;
+    --night: #0D0D0D;
+    --bark: #1A1208;
+    --cream: #F5EDD6;
+    --muted: #7A6E5F;
+    --card: #161616;
+    --border: rgba(255,77,0,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--night);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(255,77,0,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(255,140,66,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2rem;
+    background: rgba(13,13,13,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
+    color: var(--fire);
+  }
+
+  .nav-tabs { display: flex; gap: 0.5rem; }
+
+  .tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .tab-btn.active, .tab-btn:hover {
+    color: var(--cream);
+    border-color: var(--border);
+    background: rgba(255,77,0,0.1);
+  }
+
+  .tab-btn.active { color: var(--fire); }
+
+  .section { display: none; position: relative; z-index: 1; }
+  .section.active { display: block; }
+
+  .hero {
+    text-align: center;
+    padding: 5rem 2rem 3rem;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    background: rgba(255,77,0,0.15);
+    border: 1px solid var(--fire);
+    color: var(--fire);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 12vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, var(--cream) 40%, var(--ember));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 400px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.6;
+  }
+
+  .btn-fire {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--fire);
+    color: white;
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-fire:hover { background: var(--ember); transform: translateY(-1px); }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid var(--border);
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 0.75rem;
+  }
+
+  .btn-ghost:hover { border-color: var(--fire); color: var(--fire); }
+
+  .form-wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 0.05em;
+    color: var(--cream);
+    margin-bottom: 0.4rem;
+  }
+
+  .section-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+  }
+
+  .form-group { margin-bottom: 1.25rem; }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus { border-color: var(--fire); }
+  select option { background: #1a1a1a; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  .minor-section {
+    display: none;
+    background: rgba(255,140,66,0.06);
+    border: 1px solid rgba(255,140,66,0.2);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .minor-section.visible { display: block; }
+
+  .minor-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ember);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--fire);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1.5rem;
+  }
+
+  .submit-btn:hover { background: var(--ember); }
+
+  .success-msg {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+    background: rgba(0,200,100,0.08);
+    border: 1px solid rgba(0,200,100,0.25);
+    border-radius: 10px;
+    margin-top: 1rem;
+  }
+
+  .success-msg .checkmark { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .success-msg h3 { color: #4ade80; margin-bottom: 0.4rem; }
+  .success-msg p { color: var(--muted); font-size: 0.88rem; }
+
+  /* ADMIN */
+  .admin-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    color: var(--fire);
+    line-height: 1;
+  }
+
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-header h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+  }
+
+  .excel-btn {
+    display: flex; align-items: center; gap: 0.4rem;
+    background: rgba(34,197,94,0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34,197,94,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .excel-btn:hover { background: rgba(34,197,94,0.25); }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 0.85rem 1rem;
+    font-size: 0.88rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--cream);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,77,0,0.04); }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .badge-minor {
+    background: rgba(255,140,66,0.15);
+    color: var(--ember);
+    border: 1px solid rgba(255,140,66,0.3);
+  }
+
+  .badge-adult {
+    background: rgba(100,200,255,0.1);
+    color: #7dd3fc;
+    border: 1px solid rgba(100,200,255,0.2);
+  }
+
+  .del-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    transition: color 0.2s;
+  }
+
+  .del-btn:hover { color: #f87171; }
+
+  /* QR */
+  .qr-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    text-align: center;
+  }
+
+  .qr-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    margin-top: 1.5rem;
+  }
+
+  #qrcode {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem auto;
+  }
+
+  #qrcode canvas, #qrcode img {
+    border-radius: 8px;
+    border: 4px solid var(--cream);
+  }
+
+  .qr-url {
+    font-size: 0.78rem;
+    color: var(--muted);
+    word-break: break-all;
+    margin-top: 1rem;
+    padding: 0.6rem 0.9rem;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    font-family: monospace;
+  }
+
+  .qr-instructions {
+    margin-top: 1.5rem;
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.8;
+    background: rgba(255,77,0,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+
+  .qr-instructions strong { color: var(--cream); }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    nav { padding: 0.8rem 1rem; }
+    .tab-btn { font-size: 0.75rem; padding: 0.4rem 0.7rem; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section.active > * { animation: fadeUp 0.35s ease forwards; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🔥 WEEKEND 2026</div>
+  <div class="nav-tabs">
+    <button class="tab-btn active"  onclick="showTab('form',this)">✍️ Inscripción</button>
+    <button class="tab-btn"        onclick="showTab('admin',this)">📋 Admin</button>
+    <button class="tab-btn"        onclick="showTab('qr',this)">📱 QR</button>
+  </div>
+</nav>
+
+<!-- FORMULARIO -->
+<section class="section active" id="tab-form">
+  <div class="hero">
+    <div class="hero-tag">Campamento • 2026</div>
+    <h1>WEEKEND<br>2026</h1>
+    <p class="hero-sub">¡Regístrate y asegura tu cupo! Completa el formulario con tus datos personales.</p>
+    <button class="btn-fire" onclick="document.getElementById('registro').scrollIntoView({behavior:'smooth'})">
+      ✍️ Inscribirme ahora
+    </button>
+    <button class="btn-ghost" onclick="showTab('qr', document.querySelectorAll('.tab-btn')[2])">📱 Ver QR</button>
+  </div>
+
+  <div class="form-wrap" id="registro">
+    <div class="section-title">Formulario</div>
+    <div class="section-subtitle">Todos los campos son obligatorios</div>
+
+    <div class="form-card" id="formCard">
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="nombre" placeholder="Ej: Juan Pérez García">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha de nacimiento</label>
+          <input type="date" id="fechaNac" onchange="calcEdad()">
+        </div>
+        <div class="form-group">
+          <label>Edad</label>
+          <input type="number" id="edad" placeholder="Años" min="5" max="99" readonly>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teléfono / WhatsApp</label>
+          <input type="tel" id="telefono" placeholder="+57 300 000 0000">
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="sexo">
+            <option value="">Seleccionar...</option>
+            <option>Masculino</option>
+            <option>Femenino</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-group">
+        <label>¿Es menor de edad? <span style="color:var(--ember)">(menor de 18 años)</span></label>
+        <select id="esMenor" onchange="toggleMinor()">
+          <option value="">Seleccionar...</option>
+          <option value="si">Sí</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+
+      <div class="minor-section" id="minorSection">
+        <div class="minor-label">👪 Datos del acudiente</div>
+        <div class="form-group">
+          <label>Nombre del acudiente</label>
+          <input type="text" id="acudiente" placeholder="Nombre completo del padre/madre/tutor">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tel. del acudiente</label>
+            <input type="tel" id="telAcudiente" placeholder="+57 300 000 0000">
+          </div>
+          <div class="form-group">
+            <label>Parentesco</label>
+            <select id="parentesco">
+              <option value="">Seleccionar...</option>
+              <option>Padre</option>
+              <option>Madre</option>
+              <option>Tutor legal</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Alergias / Condición médica</label>
+          <input type="text" id="alergias" placeholder="Ninguna o describa brevemente">
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">Completar inscripción →</button>
+    </div>
+
+    <div class="success-msg" id="successMsg">
+      <div class="checkmark">✅</div>
+      <h3>¡Inscripción exitosa!</h3>
+      <p>Quedaste registrado(a) para el Camp Weekend 2026. ¡Nos vemos allá!</p>
+      <button class="btn-fire" style="margin-top:1.25rem" onclick="resetForm()">+ Registrar otra persona</button>
+    </div>
+  </div>
+</section>
+
+<!-- ADMIN -->
+<section class="section" id="tab-admin">
+  <div class="admin-wrap">
+    <div class="section-title">Panel Admin</div>
+    <div class="section-subtitle">Resumen de inscritos al Camp Weekend 2026</div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total inscritos</div>
+        <div class="stat-value" id="totalCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Menores de edad</div>
+        <div class="stat-value" id="menoresCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mayores de edad</div>
+        <div class="stat-value" id="mayoresCount">0</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Lista de inscritos</h3>
+        <button class="excel-btn" onclick="exportExcel()">📊 Exportar Excel</button>
+      </div>
+      <div id="tableContainer"></div>
+    </div>
+  </div>
+</section>
+
+<!-- QR -->
+<section class="section" id="tab-qr">
+  <div class="qr-wrap">
+    <div class="section-title">Código QR</div>
+    <div class="section-subtitle">Compártelo con los participantes</div>
+
+    <div class="qr-card">
+      <p style="color:var(--muted);font-size:0.88rem">Al escanearlo acceden directamente al formulario de inscripción</p>
+      <div id="qrcode"></div>
+      <div class="qr-url" id="qrUrl"></div>
+      <button class="btn-fire" style="margin-top:1.25rem;width:100%" onclick="downloadQR()">⬇️ Descargar QR</button>
+    </div>
+
+    <div class="qr-instructions">
+      <strong>¿Cómo poner esto en GitHub Pages?</strong><br>
+      1. Crea un repositorio en <strong>github.com</strong> (gratis).<br>
+      2. Sube este archivo como <strong>index.html</strong>.<br>
+      3. Ve a Settings → Pages → Branch: main → Save.<br>
+      4. Tu URL será: <strong>tuusuario.github.io/nombrerepo</strong><br>
+      5. El QR se actualiza solo con esa URL. ¡Listo!
+    </div>
+  </div>
+</section>
+
+<script>
+const STORAGE_KEY = 'weekend2026_inscritos';
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'admin') renderTable();
+  if (tab === 'qr') generateQR();
+}
+
+function calcEdad() {
+  const dob = new Date(document.getElementById('fechaNac').value);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  document.getElementById('edad').value = age >= 0 ? age : '';
+  if (age >= 0) {
+    document.getElementById('esMenor').value = age < 18 ? 'si' : 'no';
+    toggleMinor();
+  }
+}
+
+function toggleMinor() {
+  const val = document.getElementById('esMenor').value;
+  document.getElementById('minorSection').classList.toggle('visible', val === 'si');
+}
+
+function submitForm() {
+  const nombre   = document.getElementById('nombre').value.trim();
+  const fechaNac = document.getElementById('fechaNac').value;
+  const edad     = document.getElementById('edad').value;
+  const telefono = document.getElementById('telefono').value.trim();
+  const sexo     = document.getElementById('sexo').value;
+  const esMenor  = document.getElementById('esMenor').value;
+
+  if (!nombre || !fechaNac || !telefono || !sexo || !esMenor) {
+    alert('Por favor completa todos los campos obligatorios.');
+    return;
+  }
+
+  const record = {
+    id: Date.now(),
+    nombre, fechaNac, edad, telefono, sexo, esMenor,
+    fechaInscripcion: new Date().toLocaleDateString('es-CO')
+  };
+
+  if (esMenor === 'si') {
+    const acudiente    = document.getElementById('acudiente').value.trim();
+    const telAcudiente = document.getElementById('telAcudiente').value.trim();
+    const parentesco   = document.getElementById('parentesco').value;
+    const alergias     = document.getElementById('alergias').value.trim();
+    if (!acudiente || !telAcudiente || !parentesco) {
+      alert('Por favor completa los datos del acudiente.');
+      return;
+    }
+    Object.assign(record, { acudiente, telAcudiente, parentesco, alergias });
+  }
+
+  const data = getData();
+  data.push(record);
+  saveData(data);
+
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+
+function resetForm() {
+  document.getElementById('formCard').style.display = 'block';
+  document.getElementById('successMsg').style.display = 'none';
+  ['nombre','fechaNac','edad','telefono','acudiente','telAcudiente','alergias'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['sexo','esMenor','parentesco'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('minorSection').classList.remove('visible');
+}
+
+function renderTable() {
+  const data = getData();
+  const total   = data.length;
+  const menores = data.filter(r => r.esMenor === 'si').length;
+
+  document.getElementById('totalCount').textContent   = total;
+  document.getElementById('menoresCount').textContent = menores;
+  document.getElementById('mayoresCount').textContent = total - menores;
+
+  const container = document.getElementById('tableContainer');
+
+  if (total === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      Aún no hay inscritos. ¡Comparte el QR!
+    </div>`;
+    return;
+  }
+
+  let html = `<div style="overflow-x:auto"><table>
+    <thead><tr>
+      <th>#</th><th>Nombre</th><th>Edad</th>
+      <th>Teléfono</th><th>Sexo</th><th>Tipo</th>
+      <th>Acudiente</th><th>Fecha</th><th></th>
+    </tr></thead><tbody>`;
+
+  data.forEach((r, i) => {
+    const tipo = r.esMenor === 'si'
+      ? '<span class="badge badge-minor">Menor</span>'
+      : '<span class="badge badge-adult">Mayor</span>';
+    html += `<tr>
+      <td style="color:var(--muted)">${i + 1}</td>
+      <td><strong>${r.nombre}</strong></td>
+      <td>${r.edad}</td>
+      <td>${r.telefono}</td>
+      <td>${r.sexo}</td>
+      <td>${tipo}</td>
+      <td style="color:var(--muted)">${r.acudiente || '—'}</td>
+      <td style="color:var(--muted)">${r.fechaInscripcion}</td>
+      <td><button class="del-btn" onclick="deleteRecord(${r.id})">🗑</button></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function deleteRecord(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  saveData(getData().filter(r => r.id !== id));
+  renderTable();
+}
+
+function exportExcel() {
+  const data = getData();
+  if (!data.length) { alert('No hay inscritos para exportar.'); return; }
+
+  const rows = data.map((r, i) => ({
+    '#': i + 1,
+    'Nombre': r.nombre,
+    'Fecha Nac.': r.fechaNac,
+    'Edad': r.edad,
+    'Teléfono': r.telefono,
+    'Sexo': r.sexo,
+    'Menor de edad': r.esMenor === 'si' ? 'Sí' : 'No',
+    'Acudiente': r.acudiente || '',
+    'Tel. Acudiente': r.telAcudiente || '',
+    'Parentesco': r.parentesco || '',
+    'Alergias': r.alergias || '',
+    'Fecha Inscripción': r.fechaInscripcion
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inscritos');
+  ws['!cols'] = [
+    {wch:4},{wch:28},{wch:14},{wch:6},{wch:18},{wch:12},
+    {wch:14},{wch:26},{wch:18},{wch:14},{wch:22},{wch:18}
+  ];
+  XLSX.writeFile(wb, 'Inscritos_Weekend2026.xlsx');
+}
+
+let qrDone = false;
+function generateQR() {
+  if (qrDone) return;
+  qrDone = true;
+  const url = window.location.href.split('#')[0];
+  document.getElementById('qrUrl').textContent = url;
+  new QRCode(document.getElementById('qrcode'), {
+    text: url,
+    width: 220, height: 220,
+    colorDark: '#0D0D0D',
+    colorLight: '#F5EDD6',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qrcode canvas');
+  if (!canvas) { alert('Genera el QR primero.'); return; }
+  const a = document.createElement('a');
+  a.download = 'QR_Weekend2026.png';
+  a.href = canvas.toDataURL();
+  a.click();
+}
+</script>
+</body>
+</html>
