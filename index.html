@@ -470,6 +470,30 @@ if (!token) {
   `;
 }
 
+  window.subirTokens = async function () {
+
+  function generarToken() {
+    return Math.random().toString(36).substring(2, 10);
+  }
+
+  const total = 140;
+
+  for (let i = 0; i < total; i++) {
+
+    const token = generarToken();
+
+    await addDoc(collection(db, "tokens"), {
+      token: token,
+      usado: false,
+      creado: new Date()
+    });
+
+    console.log("Token creado:", token);
+  }
+
+  console.log("🔥 TODOS LOS TOKENS CREADOS");
+};
+
   const COLLECTION = 'inscripciones';
   let db = null;
 
