@@ -451,8 +451,8 @@
 
 <!-- Firebase -->
 <script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { 
+ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { 
   getFirestore, collection, addDoc, serverTimestamp,
   query, where, getDocs, updateDoc, doc
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -460,6 +460,7 @@
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
 let tokenDocId = null;
+let db = null;
 
 if (!token) {
   document.body.innerHTML = `
@@ -470,57 +471,71 @@ if (!token) {
   `;
 }
 
-  const COLLECTION = 'inscripciones';
-  let db = null;
+const COLLECTION = 'inscripciones';
 
-  function getConfig() {
-    try { return JSON.parse(localStorage.getItem('w26_fb_config') || 'null'); } catch { return null; }
+function getConfig() {
+  try { return JSON.parse(localStorage.getItem('w26_fb_config') || 'null'); } catch { return null; }
+}
+
+function initFirebase(config) {
+  try {
+    const existing = getApps().find(a => a.name === 'w26');
+    const app = existing || initializeApp(config, 'w26');
+    db = getFirestore(app);
+  } catch(e) { console.error(e); }
+}
+
+// ✅ Definida aquí, una sola vez, accesible globalmente
+window.subirTokens = async function () {
+  if (!db) { console.error("🔥 DB no está lista"); return; }
+
+  function generarToken() {
+    return Math.random().toString(36).substring(2, 10);
   }
 
-  function initFirebase(config) {
-    try {
-      const existing = getApps().find(a => a.name === 'w26');
-      const app = existing || initializeApp(config, 'w26');
-      db = getFirestore(app);
-    } catch(e) { console.error(e); }
+  const total = 140;
+  for (let i = 0; i < total; i++) {
+    const t = generarToken();
+    await addDoc(collection(db, "tokens"), {
+      token: t,
+      usado: false,
+      creado: new Date()
+    });
+    console.log("Token creado:", t);
   }
+  console.log("🔥 TODOS LOS TOKENS CREADOS");
+};
 
-  const saved = getConfig();
+const saved = getConfig();
 
 if (saved) {
   initFirebase(saved);
-
   validarToken().then(ok => {
     if (!ok) {
       const formSection = document.getElementById("form-section");
-      if (formSection) {
-        formSection.style.display = "none";
-      }
+      if (formSection) formSection.style.display = "none";
     }
   });
-
 } else {
   const dbWarning = document.getElementById('db-warning');
-  if (dbWarning) {
-    dbWarning.style.display = 'block';
-  }
+  if (dbWarning) dbWarning.style.display = 'block';
 }
 
-  window.getAge = dob => {
-    const t = new Date(), b = new Date(dob);
-    let a = t.getFullYear() - b.getFullYear();
-    const m = t.getMonth() - b.getMonth();
-    if (m < 0 || (m===0 && t.getDate() < b.getDate())) a--;
-    return a;
-  };
+window.getAge = dob => {
+  const t = new Date(), b = new Date(dob);
+  let a = t.getFullYear() - b.getFullYear();
+  const m = t.getMonth() - b.getMonth();
+  if (m < 0 || (m===0 && t.getDate() < b.getDate())) a--;
+  return a;
+};
 
-  window.checkMinor = () => {
-    const dob = document.getElementById('f-dob').value;
-    if (!dob) return;
-    document.getElementById('minor-box').style.display = getAge(dob) < 18 ? 'flex' : 'none';
-  };
+window.checkMinor = () => {
+  const dob = document.getElementById('f-dob').value;
+  if (!dob) return;
+  document.getElementById('minor-box').style.display = getAge(dob) < 18 ? 'flex' : 'none';
+};
 
-  async function validarToken() {
+async function validarToken() {
   const q = query(collection(db, "tokens"), where("token", "==", token));
   const snapshot = await getDocs(q);
 
@@ -528,30 +543,7 @@ if (saved) {
     document.body.innerHTML = "<h2 style='text-align:center;margin-top:80px;'>❌ Token inválido</h2>";
     return false;
   }
-window.subirTokens = async function () {
 
-  function generarToken() {
-    return Math.random().toString(36).substring(2, 10);
-  }
-
-  const total = 140;
-
-  for (let i = 0; i < total; i++) {
-
-    const token = generarToken();
-
-    await addDoc(collection(db, "tokens"), {
-      token: token,
-      usado: false,
-      creado: new Date()
-    });
-
-    console.log("Token creado:", token);
-  }
-
-  console.log("🔥 TODOS LOS TOKENS CREADOS");
-};
-    
   const docSnap = snapshot.docs[0];
   const data = docSnap.data();
 
@@ -564,111 +556,81 @@ window.subirTokens = async function () {
   return true;
 }
 
-  window.submitForm = async () => {
-    if (!db) { alert('⚠️ La base de datos no está configurada. Contacta al organizador.'); return; }
+window.submitForm = async () => {
+  if (!db) { alert('⚠️ La base de datos no está configurada.'); return; }
 
-    const nombre = document.getElementById('f-nombre').value.trim();
-    const dob = document.getElementById('f-dob').value;
-    const tel = document.getElementById('f-tel').value.trim();
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const dob = document.getElementById('f-dob').value;
+  const tel = document.getElementById('f-tel').value.trim();
 
-    if (!nombre || !dob || !tel) {
-      alert('Por favor completa: nombre, fecha de nacimiento y teléfono.');
-      return;
-    }
-
-    const age = getAge(dob);
-    const isMinor = age < 18;
-    let acudiente='', telAcudiente='', relacion='', medico='', permiso='';
-
-    if (isMinor) {
-      acudiente = document.getElementById('f-acudiente').value.trim();
-      telAcudiente = document.getElementById('f-tel-acudiente').value.trim();
-      relacion = document.getElementById('f-relacion').value;
-      medico = document.getElementById('f-medico').value.trim();
-      if (!acudiente || !telAcudiente || !relacion) { alert('Completa todos los datos del acudiente.'); return; }
-      if (!document.getElementById('f-permiso').checked) { alert('El acudiente debe marcar la autorización.'); return; }
-      permiso = 'Sí';
-    }
-
-    const fuente = document.getElementById('f-fuente').value;
-    const btn = document.getElementById('submit-btn');
-    const spinner = document.getElementById('form-spinner');
-    spinner.style.display = 'flex';
-    btn.disabled = true;
-
-    try {
-      await addDoc(collection(db, COLLECTION), {
-        nombre, dob, edad: age, tipo: isMinor ? 'Menor' : 'Mayor',
-        tel, acudiente, telAcudiente, relacion, medico, permiso, fuente,
-        token: token,
-        timestamp: serverTimestamp()
-      });
-
-      ['f-nombre','f-dob','f-tel','f-acudiente','f-tel-acudiente','f-medico'].forEach(id => {
-        const el = document.getElementById(id); if(el) el.value = '';
-      });
-      ['f-relacion','f-fuente'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-      document.getElementById('f-permiso').checked = false;
-      document.getElementById('minor-box').style.display = 'none';
-
-      const toast = document.getElementById('toast');
-      toast.style.display = 'block';
-      setTimeout(() => { toast.style.display = 'none'; window.scrollTo({top:0,behavior:'smooth'}); }, 3500);
-
-    } catch(e) {
-      alert('Error al guardar: ' + e.message);
-    } finally {
-      spinner.style.display = 'none';
-      btn.disabled = false;
-    }
-  };
-
-  // QR
-  function generateQR() {
-    const url = window.location.href.split('#')[0];
-    document.getElementById('qr-url-text').textContent = url;
-    document.getElementById('qr-container').innerHTML = '';
-    new QRCode(document.getElementById('qr-container'), {
-      text: url, width: 160, height: 160,
-      colorDark: '#FF4D00', colorLight: '#16161F',
-      correctLevel: QRCode.CorrectLevel.H
-    });
+  if (!nombre || !dob || !tel) {
+    alert('Por favor completa: nombre, fecha de nacimiento y teléfono.');
+    return;
   }
-  generateQR();
 
-  
-  setTimeout(() => {
-  window.subirTokens = async function () {
+  const age = getAge(dob);
+  const isMinor = age < 18;
+  let acudiente='', telAcudiente='', relacion='', medico='', permiso='';
 
-    if (!db) {
-      console.error("🔥 DB no está lista");
-      return;
+  if (isMinor) {
+    acudiente = document.getElementById('f-acudiente').value.trim();
+    telAcudiente = document.getElementById('f-tel-acudiente').value.trim();
+    relacion = document.getElementById('f-relacion').value;
+    medico = document.getElementById('f-medico').value.trim();
+    if (!acudiente || !telAcudiente || !relacion) { alert('Completa todos los datos del acudiente.'); return; }
+    if (!document.getElementById('f-permiso').checked) { alert('El acudiente debe marcar la autorización.'); return; }
+    permiso = 'Sí';
+  }
+
+  const fuente = document.getElementById('f-fuente').value;
+  const btn = document.getElementById('submit-btn');
+  const spinner = document.getElementById('form-spinner');
+  spinner.style.display = 'flex';
+  btn.disabled = true;
+
+  try {
+    await addDoc(collection(db, COLLECTION), {
+      nombre, dob, edad: age, tipo: isMinor ? 'Menor' : 'Mayor',
+      tel, acudiente, telAcudiente, relacion, medico, permiso, fuente,
+      token: token,
+      timestamp: serverTimestamp()
+    });
+
+    // ✅ Marcar el token como usado
+    if (tokenDocId) {
+      await updateDoc(doc(db, "tokens", tokenDocId), { usado: true });
     }
 
-    function generarToken() {
-      return Math.random().toString(36).substring(2, 10);
-    }
+    ['f-nombre','f-dob','f-tel','f-acudiente','f-tel-acudiente','f-medico'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.value = '';
+    });
+    ['f-relacion','f-fuente'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('f-permiso').checked = false;
+    document.getElementById('minor-box').style.display = 'none';
 
-    const total = 140;
+    const toast = document.getElementById('toast');
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; window.scrollTo({top:0,behavior:'smooth'}); }, 3500);
 
-    for (let i = 0; i < total; i++) {
+  } catch(e) {
+    alert('Error al guardar: ' + e.message);
+  } finally {
+    spinner.style.display = 'none';
+    btn.disabled = false;
+  }
+};
 
-      const token = generarToken();
-
-      await addDoc(collection(db, "tokens"), {
-        token: token,
-        usado: false,
-        creado: new Date()
-      });
-
-      console.log("Token creado:", token);
-    }
-
-    console.log("🔥 TODOS LOS TOKENS CREADOS");
-  };
-
-  console.log("✅ subirTokens LISTO");
-}, 2000);
+function generateQR() {
+  const url = window.location.href.split('#')[0];
+  document.getElementById('qr-url-text').textContent = url;
+  document.getElementById('qr-container').innerHTML = '';
+  new QRCode(document.getElementById('qr-container'), {
+    text: url, width: 160, height: 160,
+    colorDark: '#FF4D00', colorLight: '#16161F',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+generateQR();
 </script>
 </body>
 </html>
