@@ -582,7 +582,7 @@ window.submitForm = async () => {
     permiso = 'Sí';
   }
 
-  const fuente = document.getElementById('f-fuente').value;
+ const fuente = document.getElementById('f-fuente')?.value || '';
   const btn = document.getElementById('submit-btn');
   const spinner = document.getElementById('form-spinner');
   spinner.style.display = 'flex';
