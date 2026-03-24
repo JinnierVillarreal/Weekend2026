@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Weekend 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --fire: #FF4D00; --ember: #FF8C42; --gold: #FFD166;
+    --night: #08080E; --dusk: #111119; --card: #16161F;
+    --border: #252535; --text: #F0EDE8; --muted: #7A7A90;
+    --success: #00E5A0;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Instrument Sans',sans-serif; background:var(--night); color:var(--text); min-height:100vh; }
+
+  /* ─── LOGIN ─── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 60% 50% at 70% 20%, rgba(255,77,0,0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 20% 80%, rgba(255,209,102,0.06) 0%, transparent 60%);
+  }
+  .login-wrap {
+    width: 100%; max-width: 380px;
+    display: flex; flex-direction: column; gap: 32px;
+    align-items: center;
+  }
+  .login-brand {
+    text-align: center;
+  }
+  .login-brand .fire { font-size: 48px; margin-bottom: 8px; }
+  .login-brand h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px; letter-spacing: 3px;
+    background: linear-gradient(135deg, #fff 40%, var(--ember));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .login-brand p { font-size: 12px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .login-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px; width: 100%;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .login-card h2 { font-size: 18px; font-weight: 600; }
+  .field-group { display: flex; flex-direction: column; gap: 7px; }
+  label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+  input, select {
+    background: var(--dusk); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: 'Instrument Sans', sans-serif; font-size: 15px;
+    padding: 13px 16px; outline: none; transition: border .2s, box-shadow .2s; width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--fire); box-shadow: 0 0 0 3px rgba(255,77,0,.12); }
+  .login-error { color: var(--fire); font-size: 13px; display: none; }
+
+  .btn {
+    padding: 14px 28px; border-radius: 8px;
+    font-family: 'Instrument Sans', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none; transition: all .2s; letter-spacing: .3px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-fire { background: var(--fire); color: #fff; box-shadow: 0 0 24px rgba(255,77,0,.35); }
+  .btn-fire:hover { background: var(--ember); transform: translateY(-1px); box-shadow: 0 0 36px rgba(255,77,0,.5); }
+  .btn-fire:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--ember); color: var(--ember); }
+  .btn-sm { padding: 9px 18px; font-size: 12px; }
+  .btn-success { background: var(--success); color: #000; box-shadow: 0 0 20px rgba(0,229,160,.25); }
+  .btn-success:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* ─── DASHBOARD ─── */
+  #dashboard { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* Topbar */
+  .topbar {
+    background: var(--dusk); border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-brand {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .topbar-brand .dot {
+    width: 8px; height: 8px; background: var(--fire); border-radius: 50%;
+    box-shadow: 0 0 8px var(--fire);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .topbar-brand h1 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--text);
+  }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  /* Stats */
+  .stats-section { padding: 28px 28px 0; display: flex; gap: 16px; flex-wrap: wrap; }
+  .stat-card {
+    flex: 1; min-width: 140px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.total::after { background: var(--fire); }
+  .stat-card.adults::after { background: var(--success); }
+  .stat-card.minors::after { background: var(--ember); }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 48px; line-height: 1;
+  }
+  .stat-card.total .stat-num { color: var(--fire); }
+  .stat-card.adults .stat-num { color: var(--success); }
+  .stat-card.minors .stat-num { color: var(--ember); }
+  .stat-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+
+  /* Firebase config strip */
+  .config-strip {
+    margin: 20px 28px 0;
+    background: rgba(255,77,0,0.08); border: 1px solid rgba(255,77,0,0.2);
+    border-radius: 12px; padding: 16px 20px;
+    display: none; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .config-strip p { font-size: 13px; color: var(--ember); }
+
+  /* Table */
+  .table-section { padding: 24px 28px 60px; }
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+  }
+  .table-header h2 { font-size: 16px; font-weight: 600; color: var(--text); }
+  .table-header .count {
+    font-size: 12px; color: var(--muted);
+    background: var(--card); border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 100px;
+  }
+
+  .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--dusk); }
+  th {
+    text-align: left; padding: 12px 16px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); white-space: nowrap; border-bottom: 1px solid var(--border);
+  }
+  td { padding: 13px 16px; border-bottom: 1px solid rgba(37,37,53,.6); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(255,77,0,.03); }
+
+  .badge {
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 100px; white-space: nowrap;
+  }
+  .badge-minor { background: rgba(255,77,0,.15); color: var(--ember); }
+  .badge-adult { background: rgba(0,229,160,.1); color: var(--success); }
+
+  .empty-state {
+    text-align: center; padding: 80px 20px;
+    color: var(--muted); border-radius: 14px;
+    border: 1px dashed var(--border);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* Spinner */
+  .spinner-wrap { display:none; text-align:center; padding:48px; color:var(--muted); font-size:14px; }
+  .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--fire); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 10px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px; max-width: 500px; width: 100%;
+    display: flex; flex-direction: column; gap: 18px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-box h3 { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:1.5px; color: var(--ember); }
+  .modal-box p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .modal-box code {
+    background: var(--dusk); border: 1px solid var(--border);
+    border-radius: 5px; padding: 2px 7px; font-size: 12px;
+    color: var(--ember); font-family: monospace;
+  }
+  .step { display:flex; gap:12px; align-items:flex-start; }
+  .step-num {
+    background: var(--fire); color: #fff; border-radius: 50%;
+    width: 24px; height: 24px; min-width: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .cfg-input { font-size:13px !important; padding:10px 14px !important; font-family:monospace !important; }
+  #cfg-error { color:var(--fire); font-size:12px; display:none; }
+
+  /* Responsive */
+  @media(max-width:600px) {
+    .topbar { padding: 0 16px; }
+    .stats-section { padding: 16px 16px 0; }
+    .table-section { padding: 16px 16px 40px; }
+    .config-strip { margin: 16px 16px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════
+     LOGIN
+═══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="fire">🔥</div>
+      <h1>Weekend 2026</h1>
+      <p>Panel Administrativo</p>
+    </div>
+    <div class="login-card">
+      <h2>Acceso restringido</h2>
+      <p style="font-size:13px;color:var(--muted);">Solo para organizadores del campamento.</p>
+      <div class="field-group">
+        <label>Contraseña</label>
+        <input type="password" id="admin-pass" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <p class="login-error" id="login-error">❌ Contraseña incorrecta</p>
+      <button class="btn btn-fire" style="width:100%;" onclick="doLogin()">Entrar al panel</button>
+      <a href="index.html" class="btn btn-ghost" style="width:100%;justify-content:center;text-align:center;">← Volver al inicio</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     DASHBOARD
+═══════════════════════════════ -->
+<div id="dashboard">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="dot"></div>
+      <h1>Admin · Weekend 2026</h1>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-success btn-sm" onclick="exportExcel()">📥 Exportar Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadData()">🔄 Actualizar</button>
+      <button class="btn btn-ghost btn-sm" onclick="openConfigModal()">⚙️ Firebase</button>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Inicio</a>
+    </div>
+  </div>
+
+  <!-- Firebase not configured warning -->
+  <div class="config-strip" id="config-strip">
+    <p>⚙️ Firebase no está configurado — los datos no se cargarán hasta conectarlo.</p>
+    <button class="btn btn-fire btn-sm" onclick="openConfigModal()">Configurar ahora</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-section">
+    <div class="stat-card total">
+      <div class="stat-num" id="stat-total">—</div>
+      <div class="stat-lbl">Total inscritos</div>
+    </div>
+    <div class="stat-card adults">
+      <div class="stat-num" id="stat-adults">—</div>
+      <div class="stat-lbl">Mayores de edad</div>
+    </div>
+    <div class="stat-card minors">
+      <div class="stat-num" id="stat-minors">—</div>
+      <div class="stat-lbl">Menores de edad</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-section">
+    <div class="table-header">
+      <h2>Listado de inscritos</h2>
+      <span class="count" id="table-count">0 registros</span>
+    </div>
+
+    <div class="spinner-wrap" id="admin-spinner">
+      <div class="spinner"></div>
+      Cargando inscripciones desde Firebase...
+    </div>
+
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="icon">📋</div>
+      <p>Aún no hay inscripciones registradas.</p>
+    </div>
+
+    <div class="table-wrap" id="table-wrap" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Nombre</th><th>Fecha nac.</th><th>Edad</th><th>Tipo</th>
+            <th>Teléfono</th><th>Acudiente</th><th>Tel. Acudiente</th>
+            <th>Relación</th><th>Info médica</th><th>Permiso</th><th>Fuente</th><th>Registro</th>
+          </tr>
+        </thead>
+        <tbody id="admin-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FIREBASE -->
+<div class="modal-overlay" id="config-modal">
+  <div class="modal-box">
+    <h3>⚙️ Configurar Firebase</h3>
+    <p>Conecta la base de datos en la nube. Solo lo haces una vez desde cualquier dispositivo.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <p>Ve a <strong>console.firebase.google.com</strong> → crea un proyecto (ej: <code>weekend2026</code>)</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <p>Dentro del proyecto → ícono <strong>Web &lt;/&gt;</strong> → registra la app → copia <code>apiKey</code> y <code>projectId</code></p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <p>Ve a <strong>Firestore Database</strong> → <strong>Crear base de datos</strong> → <strong>Modo prueba</strong> → región <code>us-central1</code></p>
+    </div>
+
+    <div class="field-group">
+      <label>API Key</label>
+      <input class="cfg-input" id="cfg-apikey" placeholder="AIzaSyXXXXXXXXXXXXXXXXXX" />
+    </div>
+    <div class="field-group">
+      <label>Project ID</label>
+      <input class="cfg-input" id="cfg-projectid" placeholder="weekend2026-ab123" />
+    </div>
+    <p id="cfg-error"></p>
+    <button class="btn btn-fire" style="width:100%;" onclick="saveConfig()">✅ Guardar y conectar</button>
+    <button class="btn btn-ghost" style="width:100%;" onclick="document.getElementById('config-modal').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, getDocs, query, orderBy }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const ADMIN_PASSWORD = 'weekend2026'; // ← CAMBIA ESTO
+  const COLLECTION = 'inscripciones';
+  let db = null;
+  let cachedRegs = [];
+
+  function getConfig() {
+    try { return JSON.parse(localStorage.getItem('w26_fb_config') || 'null'); } catch { return null; }
+  }
+
+  function initFirebase(config) {
+    try {
+      const existing = getApps().find(a => a.name === 'w26');
+      const app = existing || initializeApp(config, 'w26');
+      db = getFirestore(app);
+      document.getElementById('config-strip').style.display = 'none';
+      return true;
+    } catch(e) { console.error(e); return false; }
+  }
+
+  // Auto-init
+  const saved = getConfig();
+  if (saved) initFirebase(saved);
+
+  // ── Login ──────────────────────────────
+  window.doLogin = function() {
+    const pass = document.getElementById('admin-pass').value;
+    if (pass === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'flex';
+      if (!db) document.getElementById('config-strip').style.display = 'flex';
+      loadData();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  };
+
+  // ── Config ─────────────────────────────
+  window.openConfigModal = function() {
+    const cfg = getConfig();
+    if (cfg) {
+      document.getElementById('cfg-apikey').value = cfg.apiKey || '';
+      document.getElementById('cfg-projectid').value = cfg.projectId || '';
+    }
+    document.getElementById('config-modal').classList.add('open');
+  };
+
+  window.saveConfig = function() {
+    const apiKey = document.getElementById('cfg-apikey').value.trim();
+    const projectId = document.getElementById('cfg-projectid').value.trim();
+    const errEl = document.getElementById('cfg-error');
+    if (!apiKey || !projectId) {
+      errEl.textContent = 'Ingresa ambos valores.';
+      errEl.style.display = 'block'; return;
+    }
+    const config = {
+      apiKey, projectId,
+      authDomain: `${projectId}.firebaseapp.com`,
+      storageBucket: `${projectId}.appspot.com`,
+      messagingSenderId: '', appId: ''
+    };
+    localStorage.setItem('w26_fb_config', JSON.stringify(config));
+    const ok = initFirebase(config);
+    if (ok) {
+      document.getElementById('config-modal').classList.remove('open');
+      errEl.style.display = 'none';
+      loadData();
+    } else {
+      errEl.textContent = 'No se pudo conectar. Verifica los datos.';
+      errEl.style.display = 'block';
+    }
+  };
+
+  // ── Load Data ──────────────────────────
+  window.loadData = async function() {
+    if (!db) {
+      document.getElementById('config-strip').style.display = 'flex';
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('table-wrap').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('admin-spinner').style.display = 'block';
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('table-wrap').style.display = 'none';
+
+    try {
+      const q = query(collection(db, COLLECTION), orderBy('timestamp', 'desc'));
+      const snap = await getDocs(q);
+      cachedRegs = [];
+      snap.forEach(doc => cachedRegs.push(doc.data()));
+
+      const total = cachedRegs.length;
+      const adults = cachedRegs.filter(r => r.tipo === 'Mayor').length;
+      const minors = cachedRegs.filter(r => r.tipo === 'Menor').length;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-adults').textContent = adults;
+      document.getElementById('stat-minors').textContent = minors;
+      document.getElementById('table-count').textContent = `${total} registro${total !== 1 ? 's' : ''}`;
+
+      if (total === 0) {
+        document.getElementById('empty-state').style.display = 'block';
+      } else {
+        document.getElementById('table-wrap').style.display = 'block';
+        document.getElementById('admin-tbody').innerHTML = cachedRegs.map((r, i) => `
+          <tr>
+            <td style="color:var(--muted);font-weight:600">${i + 1}</td>
+            <td><strong>${r.nombre}</strong></td>
+            <td>${r.dob || '—'}</td>
+            <td>${r.edad} años</td>
+            <td>${r.tipo === 'Menor'
+              ? '<span class="badge badge-minor">👶 Menor</span>'
+              : '<span class="badge badge-adult">✅ Mayor</span>'}</td>
+            <td>${r.tel}</td>
+            <td>${r.acudiente || '—'}</td>
+            <td>${r.telAcudiente || '—'}</td>
+            <td>${r.relacion || '—'}</td>
+            <td>${r.medico || '—'}</td>
+            <td>${r.permiso || '—'}</td>
+            <td>${r.fuente || '—'}</td>
+            <td style="color:var(--muted);font-size:11px;white-space:nowrap">${
+              r.timestamp?.toDate ? r.timestamp.toDate().toLocaleString('es-CO') : '—'
+            }</td>
+          </tr>
+        `).join('');
+      }
+
+    } catch(e) {
+      alert('Error cargando datos: ' + e.message);
+    } finally {
+      document.getElementById('admin-spinner').style.display = 'none';
+    }
+  };
+
+  // ── Export Excel ───────────────────────
+  window.exportExcel = function() {
+    if (!cachedRegs.length) {
+      alert('No hay datos para exportar. Primero carga los inscritos.');
+      return;
+    }
+    const data = cachedRegs.map((r, i) => ({
+      '#': i + 1,
+      'Nombre': r.nombre,
+      'Fecha Nacimiento': r.dob,
+      'Edad': r.edad,
+      'Tipo': r.tipo,
+      'Teléfono': r.tel,
+      'Acudiente': r.acudiente || '',
+      'Tel. Acudiente': r.telAcudiente || '',
+      'Relación': r.relacion || '',
+      'Info Médica': r.medico || '',
+      'Permiso': r.permiso || '',
+      'Fuente': r.fuente || '',
+      'Fecha Registro': r.timestamp?.toDate ? r.timestamp.toDate().toLocaleString('es-CO') : ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [
+      {wch:4},{wch:28},{wch:16},{wch:6},{wch:8},{wch:18},
+      {wch:28},{wch:18},{wch:12},{wch:24},{wch:8},{wch:20},{wch:22}
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inscritos');
+    XLSX.writeFile(wb, `Weekend2026_Inscritos_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+</script>
+</body>
+</html>
