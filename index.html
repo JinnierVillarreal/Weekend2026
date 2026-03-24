@@ -635,6 +635,40 @@ window.subirTokens = async function () {
     });
   }
   generateQR();
+
+  
+  setTimeout(() => {
+  window.subirTokens = async function () {
+
+    if (!db) {
+      console.error("🔥 DB no está lista");
+      return;
+    }
+
+    function generarToken() {
+      return Math.random().toString(36).substring(2, 10);
+    }
+
+    const total = 140;
+
+    for (let i = 0; i < total; i++) {
+
+      const token = generarToken();
+
+      await addDoc(collection(db, "tokens"), {
+        token: token,
+        usado: false,
+        creado: new Date()
+      });
+
+      console.log("Token creado:", token);
+    }
+
+    console.log("🔥 TODOS LOS TOKENS CREADOS");
+  };
+
+  console.log("✅ subirTokens LISTO");
+}, 2000);
 </script>
 </body>
 </html>
